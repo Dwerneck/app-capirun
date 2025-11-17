@@ -1,18 +1,20 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/lib/auth-context';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { getActivities } from '@/lib/activity-storage';
 import { ACTIVITY_LABELS } from '@/lib/constants';
+import { ShareActivity } from '@/components/custom/share-activity';
 import { ArrowLeft, Calendar, TrendingUp, Flame, Timer, Coins } from 'lucide-react';
 import Link from 'next/link';
 
 export default function HistoryPage() {
   const router = useRouter();
   const { user, isLoading } = useAuth();
+  const [expandedActivity, setExpandedActivity] = useState<string | null>(null);
 
   useEffect(() => {
     if (!isLoading && !user) {
@@ -44,6 +46,14 @@ export default function HistoryPage() {
       month: 'short',
       year: 'numeric',
     });
+  };
+
+  const calculatePace = (distance: number, duration: number) => {
+    if (distance === 0) return '0:00';
+    const paceMinutes = duration / 60 / distance;
+    const mins = Math.floor(paceMinutes);
+    const secs = Math.floor((paceMinutes - mins) * 60);
+    return `${mins}:${secs.toString().padStart(2, '0')}`;
   };
 
   return (
@@ -112,7 +122,7 @@ export default function HistoryPage() {
                       <span>{formatDate(activity.date)}</span>
                     </div>
 
-                    <div className="grid grid-cols-4 gap-2">
+                    <div className="grid grid-cols-4 gap-2 mb-3">
                       <div className="bg-emerald-950/50 p-2 rounded">
                         <div className="flex items-center gap-1 mb-1">
                           <TrendingUp className="w-3 h-3 text-blue-400" />
@@ -144,6 +154,16 @@ export default function HistoryPage() {
                         </div>
                         <p className="text-white font-semibold text-sm">{activity.avgSpeed.toFixed(1)} km/h</p>
                       </div>
+                    </div>
+
+                    {/* Botão de Compartilhar */}
+                    <div className="mt-3">
+                      <ShareActivity
+                        distance={activity.distance}
+                        duration={activity.duration}
+                        calories={activity.calories}
+                        pace={calculatePace(activity.distance, activity.duration)}
+                      />
                     </div>
                   </div>
                 </div>

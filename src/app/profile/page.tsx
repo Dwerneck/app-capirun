@@ -1,27 +1,37 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/lib/auth-context';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { ArrowLeft, User, Mail, Calendar, Weight, Ruler, Coins, Save } from 'lucide-react';
+import { ArrowLeft, User, Mail, Calendar, Weight, Ruler, Coins, Save, Camera, Upload } from 'lucide-react';
 import Link from 'next/link';
 
 export default function ProfilePage() {
   const router = useRouter();
   const { user, updateUser, isLoading } = useAuth();
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [name, setName] = useState('');
   const [age, setAge] = useState('');
   const [weight, setWeight] = useState('');
   const [height, setHeight] = useState('');
+  const [profileImage, setProfileImage] = useState<string | null>(null);
+  const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  useEffect(() => {
+    if (!mounted) return;
+    
     if (!isLoading && !user) {
       router.push('/login');
+      return;
     }
     
     if (user) {
@@ -29,16 +39,35 @@ export default function ProfilePage() {
       setAge(user.age?.toString() || '');
       setWeight(user.weight?.toString() || '');
       setHeight(user.height?.toString() || '');
+      
+      // Carregar foto de perfil do localStorage
+      const savedImage = localStorage.getItem(`profile_image_${user.id}`);
+      if (savedImage) {
+        setProfileImage(savedImage);
+      }
     }
-  }, [user, isLoading, router]);
+  }, [user, isLoading, router, mounted]);
 
-  if (isLoading || !user) {
+  if (!mounted || isLoading || !user) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-emerald-950 via-black to-emerald-900">
         <div className="text-white text-xl">Carregando...</div>
       </div>
     );
   }
+
+  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        const imageData = reader.result as string;
+        setProfileImage(imageData);
+        localStorage.setItem(`profile_image_${user.id}`, imageData);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
 
   const handleSave = () => {
     updateUser({
@@ -60,11 +89,14 @@ export default function ProfilePage() {
       {/* Header */}
       <header className="bg-black/50 border-b border-emerald-800 p-4">
         <div className="max-w-7xl mx-auto flex items-center gap-4">
-          <Link href="/dashboard">
-            <Button variant="ghost" size="icon" className="text-emerald-400 hover:text-emerald-300">
-              <ArrowLeft className="w-5 h-5" />
-            </Button>
-          </Link>
+          <Button 
+            variant="ghost" 
+            size="icon" 
+            className="text-emerald-400 hover:text-emerald-300"
+            onClick={() => router.push('/dashboard')}
+          >
+            <ArrowLeft className="w-5 h-5" />
+          </Button>
           <div>
             <h1 className="text-xl font-bold text-white">Meu Perfil</h1>
             <p className="text-xs text-emerald-400">Gerencie suas informações</p>
@@ -77,8 +109,27 @@ export default function ProfilePage() {
         <Card className="bg-gradient-to-r from-emerald-600 to-emerald-800 border-none">
           <CardContent className="p-6">
             <div className="flex items-center gap-4">
-              <div className="w-20 h-20 bg-white rounded-full flex items-center justify-center">
-                <User className="w-10 h-10 text-emerald-600" />
+              <div className="relative">
+                <div className="w-20 h-20 bg-white rounded-full flex items-center justify-center overflow-hidden">
+                  {profileImage ? (
+                    <img src={profileImage} alt="Perfil" className="w-full h-full object-cover" />
+                  ) : (
+                    <User className="w-10 h-10 text-emerald-600" />
+                  )}
+                </div>
+                <button
+                  onClick={() => fileInputRef.current?.click()}
+                  className="absolute -bottom-1 -right-1 w-8 h-8 bg-emerald-600 rounded-full flex items-center justify-center border-2 border-white hover:bg-emerald-700 transition-colors"
+                >
+                  <Camera className="w-4 h-4 text-white" />
+                </button>
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept="image/*"
+                  onChange={handleImageUpload}
+                  className="hidden"
+                />
               </div>
               <div className="flex-1">
                 <h2 className="text-2xl font-bold text-white mb-1">{user.name}</h2>
@@ -111,11 +162,12 @@ export default function ProfilePage() {
                 {user.subscriptionStatus === 'annual' && 'Plano Anual Ativo'}
               </p>
               {user.subscriptionStatus === 'free' && daysRemaining < 7 && (
-                <Link href="/subscription">
-                  <Button className="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-semibold mt-2">
-                    Assinar Agora
-                  </Button>
-                </Link>
+                <Button 
+                  className="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-semibold mt-2"
+                  onClick={() => router.push('/subscription')}
+                >
+                  Assinar Agora
+                </Button>
               )}
             </div>
           </CardContent>
