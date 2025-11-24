@@ -103,41 +103,6 @@ export default function DashboardPage() {
           </CardContent>
         </Card>
 
-        {/* Novas Abas - Sorteios e Capicare */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <Link href="/raffles">
-            <Card className="bg-gradient-to-r from-yellow-600 to-amber-600 hover:from-yellow-700 hover:to-amber-700 transition-colors cursor-pointer border-none h-full">
-              <CardContent className="p-6">
-                <div className="flex items-center gap-4">
-                  <div className="w-16 h-16 bg-white/20 rounded-full flex items-center justify-center flex-shrink-0">
-                    <Gift className="w-8 h-8 text-white" />
-                  </div>
-                  <div>
-                    <h3 className="text-xl font-bold text-white mb-1">Sorteios</h3>
-                    <p className="text-white/90 text-sm">Concorra a prêmios incríveis com suas capicoins!</p>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          </Link>
-
-          <Link href="/capicare">
-            <Card className="bg-gradient-to-r from-red-600 to-pink-600 hover:from-red-700 hover:to-pink-700 transition-colors cursor-pointer border-none h-full">
-              <CardContent className="p-6">
-                <div className="flex items-center gap-4">
-                  <div className="w-16 h-16 bg-white/20 rounded-full flex items-center justify-center flex-shrink-0">
-                    <Heart className="w-8 h-8 text-white" />
-                  </div>
-                  <div>
-                    <h3 className="text-xl font-bold text-white mb-1">Capicare</h3>
-                    <p className="text-white/90 text-sm">Benefícios de saúde com descontos exclusivos!</p>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          </Link>
-        </div>
-
         {/* Estatísticas da Semana */}
         <Card className="bg-black/50 border-emerald-800">
           <CardHeader>
@@ -216,6 +181,41 @@ export default function DashboardPage() {
             </div>
           </CardContent>
         </Card>
+
+        {/* Novas Abas - Sorteios e Capicare */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <Link href="/raffles">
+            <Card className="bg-gradient-to-r from-yellow-600 to-amber-600 hover:from-yellow-700 hover:to-amber-700 transition-colors cursor-pointer border-none h-full">
+              <CardContent className="p-6">
+                <div className="flex items-center gap-4">
+                  <div className="w-16 h-16 bg-white/20 rounded-full flex items-center justify-center flex-shrink-0">
+                    <Gift className="w-8 h-8 text-white" />
+                  </div>
+                  <div>
+                    <h3 className="text-xl font-bold text-white mb-1">Sorteios</h3>
+                    <p className="text-white/90 text-sm">Concorra a prêmios incríveis com suas capicoins!</p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </Link>
+
+          <Link href="/capicare">
+            <Card className="bg-gradient-to-r from-red-600 to-pink-600 hover:from-red-700 hover:to-pink-700 transition-colors cursor-pointer border-none h-full">
+              <CardContent className="p-6">
+                <div className="flex items-center gap-4">
+                  <div className="w-16 h-16 bg-white/20 rounded-full flex items-center justify-center flex-shrink-0">
+                    <Heart className="w-8 h-8 text-white" />
+                  </div>
+                  <div>
+                    <h3 className="text-xl font-bold text-white mb-1">Capicare</h3>
+                    <p className="text-white/90 text-sm">Benefícios de saúde com descontos exclusivos!</p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </Link>
+        </div>
 
         {/* Links Rápidos */}
         <div className="grid grid-cols-2 md:grid-cols-3 gap-4">

@@ -6,8 +6,8 @@ import { useAuth } from '@/lib/auth-context';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { ActivityType } from '@/lib/types';
-import { ACTIVITY_LABELS } from '@/lib/constants';
-import { ArrowLeft, Play } from 'lucide-react';
+import { ACTIVITY_LABELS, ACTIVITY_RULES } from '@/lib/constants';
+import { ArrowLeft, Play, Coins } from 'lucide-react';
 import Link from 'next/link';
 
 export default function StartActivityPage() {
@@ -64,40 +64,47 @@ export default function StartActivityPage() {
       <main className="max-w-7xl mx-auto p-4 space-y-6">
         {/* Seleção de Atividade */}
         <div className="space-y-4">
-          {activities.map((activity) => (
-            <Card
-              key={activity.type}
-              className={`cursor-pointer transition-all border-2 ${
-                selectedActivity === activity.type
-                  ? 'border-emerald-400 bg-emerald-950/50'
-                  : 'border-emerald-800 bg-black/50 hover:border-emerald-600'
-              }`}
-              onClick={() => setSelectedActivity(activity.type)}
-            >
-              <CardContent className="p-6">
-                <div className="flex items-center gap-4">
-                  <div className={`w-16 h-16 bg-gradient-to-br ${activity.color} rounded-full flex items-center justify-center text-4xl`}>
-                    {activity.icon}
-                  </div>
-                  <div className="flex-1">
-                    <h3 className="text-xl font-bold text-white mb-1">
-                      {ACTIVITY_LABELS[activity.type]}
-                    </h3>
-                    <p className="text-emerald-400 text-sm">
-                      {activity.type === 'walking' && 'Peso 2.0x - Ideal para iniciantes'}
-                      {activity.type === 'running' && 'Peso 1.0x - Esforço moderado'}
-                      {activity.type === 'cycling' && 'Peso 0.5x - Alto desempenho'}
-                    </p>
-                  </div>
-                  {selectedActivity === activity.type && (
-                    <div className="w-6 h-6 bg-emerald-400 rounded-full flex items-center justify-center">
-                      <div className="w-3 h-3 bg-white rounded-full" />
+          {activities.map((activity) => {
+            const rules = ACTIVITY_RULES[activity.type];
+            return (
+              <Card
+                key={activity.type}
+                className={`cursor-pointer transition-all border-2 ${
+                  selectedActivity === activity.type
+                    ? 'border-emerald-400 bg-emerald-950/50'
+                    : 'border-emerald-800 bg-black/50 hover:border-emerald-600'
+                }`}
+                onClick={() => setSelectedActivity(activity.type)}
+              >
+                <CardContent className="p-6">
+                  <div className="flex items-center gap-4">
+                    <div className={`w-16 h-16 bg-gradient-to-br ${activity.color} rounded-full flex items-center justify-center text-4xl flex-shrink-0`}>
+                      {activity.icon}
                     </div>
-                  )}
-                </div>
-              </CardContent>
-            </Card>
-          ))}
+                    <div className="flex-1">
+                      <h3 className="text-xl font-bold text-white mb-1">
+                        {ACTIVITY_LABELS[activity.type]}
+                      </h3>
+                      <div className="space-y-1">
+                        <p className="text-emerald-400 text-sm flex items-center gap-1">
+                          <Coins className="w-4 h-4 text-yellow-400" />
+                          <strong>Multiplicador:</strong> {rules.multiplier} moedas/km
+                        </p>
+                        <p className="text-emerald-300 text-xs">
+                          Máx: {rules.maxDistance}km/mês • {rules.maxCoins} moedas/mês
+                        </p>
+                      </div>
+                    </div>
+                    {selectedActivity === activity.type && (
+                      <div className="w-6 h-6 bg-emerald-400 rounded-full flex items-center justify-center flex-shrink-0">
+                        <div className="w-3 h-3 bg-white rounded-full" />
+                      </div>
+                    )}
+                  </div>
+                </CardContent>
+              </Card>
+            );
+          })}
         </div>
 
         {/* Informações */}
@@ -110,16 +117,22 @@ export default function StartActivityPage() {
           </CardHeader>
           <CardContent className="space-y-3 text-emerald-200">
             <p className="text-sm">
-              🏃 <strong>Cada atividade gera moedas</strong> baseadas em calorias queimadas e distância percorrida
+              🏃 <strong>Cada atividade gera moedas</strong> baseadas APENAS na distância percorrida (km)
             </p>
             <p className="text-sm">
-              🎯 <strong>Fórmula:</strong> (calorias × 0.1 + km × 1) × peso da modalidade
+              🎯 <strong>Fórmula:</strong> distância (km) × multiplicador da modalidade
+            </p>
+            <p className="text-sm">
+              📊 <strong>Calorias:</strong> são exibidas apenas para informação (não geram moedas)
             </p>
             <p className="text-sm">
               🏆 <strong>Troque suas moedas</strong> por produtos reais na Capirun Store
             </p>
             <p className="text-sm">
               📍 <strong>Retirada mensal</strong> em Curitiba - PR
+            </p>
+            <p className="text-sm">
+              ⚠️ <strong>Limite mensal:</strong> máximo de 2000 capicoins por mês (todas modalidades)
             </p>
           </CardContent>
         </Card>

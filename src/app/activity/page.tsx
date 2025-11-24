@@ -8,7 +8,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { ActivityType, Activity } from '@/lib/types';
 import { ACTIVITY_LABELS, calculateCalories, calculateCoinsWithLimits, checkSpeedAndGetActivityType, ACTIVITY_RULES } from '@/lib/constants';
 import { saveActivity, getMonthlyStats } from '@/lib/activity-storage';
-import { Pause, Play, Square, Timer, Gauge, Flame, TrendingUp, Clock, AlertTriangle } from 'lucide-react';
+import { Pause, Play, Square, Timer, Gauge, Flame, TrendingUp, Clock, AlertTriangle, Coins } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 
 function ActivityContent() {
@@ -137,9 +137,11 @@ function ActivityContent() {
     try {
       const endTime = new Date();
       const userWeight = user.weight || 70; // peso padrão se não configurado
+      
+      // Calorias são calculadas apenas para informação (NÃO geram moedas)
       const calories = calculateCalories(distance, duration, userWeight, actualActivityType);
       
-      // NOVA LÓGICA: Calcular moedas com limites mensais
+      // NOVA LÓGICA: Calcular moedas APENAS por distância com multiplicador
       const monthlyStats = getMonthlyStats(user.id);
       const coinsResult = calculateCoinsWithLimits(distance, actualActivityType, monthlyStats);
       
@@ -171,9 +173,10 @@ function ActivityContent() {
     }
   };
 
+  // Calorias apenas informativas (NÃO geram moedas)
   const currentCalories = calculateCalories(distance, duration, user.weight || 70, actualActivityType);
   
-  // Calcular moedas estimadas em tempo real
+  // Calcular moedas estimadas em tempo real (APENAS por distância)
   const monthlyStats = getMonthlyStats(user.id);
   const estimatedCoinsResult = calculateCoinsWithLimits(distance, actualActivityType, monthlyStats);
   const estimatedCoins = isBlocked ? 0 : estimatedCoinsResult.coins;
@@ -270,22 +273,28 @@ function ActivityContent() {
               <Flame className="w-8 h-8 text-white mb-3" />
               <p className="text-white/80 text-sm mb-1">Calorias</p>
               <p className="text-3xl font-bold text-white">{currentCalories}</p>
-              <p className="text-white/80 text-xs">kcal</p>
+              <p className="text-white/80 text-xs">kcal (informativo)</p>
             </CardContent>
           </Card>
         </div>
 
-        {/* Moedas Estimadas */}
+        {/* Moedas Estimadas - Destaque que é APENAS por KM */}
         <Card className="bg-gradient-to-r from-yellow-600 to-amber-600 border-none">
           <CardContent className="p-6">
             <div className="text-center">
+              <Coins className="w-12 h-12 text-white mx-auto mb-3" />
               <p className="text-white/80 text-sm mb-2">Capicoins Estimadas</p>
-              <p className="text-5xl font-bold text-white">{estimatedCoins}</p>
-              <p className="text-white/80 text-xs mt-2">
-                {ACTIVITY_RULES[actualActivityType].coinsPerKm} moedas/km • Máx: {ACTIVITY_RULES[actualActivityType].maxCoins}/mês
-              </p>
-            </CardContent>
-          </Card>
+              <p className="text-5xl font-bold text-white mb-2">{estimatedCoins}</p>
+              <div className="bg-white/20 rounded-lg p-3 mt-3">
+                <p className="text-white text-sm font-semibold">
+                  Multiplicador: {ACTIVITY_RULES[actualActivityType].multiplier} moedas/km
+                </p>
+                <p className="text-white/80 text-xs mt-1">
+                  Máx: {ACTIVITY_RULES[actualActivityType].maxCoins} moedas/mês • {ACTIVITY_RULES[actualActivityType].maxDistance}km/mês
+                </p>
+              </div>
+            </div>
+          </CardContent>
         </Card>
 
         {/* Controles */}
@@ -317,9 +326,12 @@ function ActivityContent() {
         </div>
 
         {/* Nota */}
-        <p className="text-center text-emerald-400 text-sm">
-          💡 Em produção, usaremos GPS real para rastreamento preciso
-        </p>
+        <div className="bg-blue-900/30 border border-blue-600 rounded-lg p-4">
+          <p className="text-blue-200 text-sm text-center">
+            💡 <strong>Importante:</strong> Capicoins são geradas APENAS por distância percorrida (km). 
+            Calorias são exibidas apenas para informação.
+          </p>
+        </div>
       </main>
     </div>
   );

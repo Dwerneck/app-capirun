@@ -2,35 +2,29 @@
 
 import { ActivityType } from './types';
 
-// NOVAS REGRAS DE DISTRIBUIÇÃO DE CAPICOINS
+// REGRAS DE DISTRIBUIÇÃO DE CAPICOINS - MULTIPLICADORES POR KM
 export const ACTIVITY_RULES = {
   walking: {
-    coinsPerKm: 12,
+    multiplier: 12, // 12 moedas por km
     maxDistance: 165, // km por mês
     maxCoins: 2000, // moedas por mês
     maxSpeed: 7, // km/h
     label: 'Caminhada',
   },
   running: {
-    coinsPerKm: 6,
+    multiplier: 6, // 6 moedas por km
     maxDistance: 330, // km por mês
     maxCoins: 2000, // moedas por mês
     maxSpeed: 18, // km/h
     label: 'Corrida',
   },
   cycling: {
-    coinsPerKm: 2,
+    multiplier: 2, // 2 moedas por km
     maxDistance: 1000, // km por mês
     maxCoins: 2000, // moedas por mês
     maxSpeed: 40, // km/h
     label: 'Ciclismo',
   },
-} as const;
-
-export const ACTIVITY_WEIGHTS = {
-  walking: 2.0,
-  running: 1.0,
-  cycling: 0.5,
 } as const;
 
 export const ACTIVITY_LABELS = {
@@ -48,7 +42,7 @@ export const FREE_TRIAL_DAYS = 30;
 
 export const PICKUP_LOCATION = 'Curitiba - PR';
 
-// NOVA FUNÇÃO: Calcular moedas com as novas regras e limites mensais
+// FUNÇÃO: Calcular moedas APENAS por distância (sem calorias)
 export function calculateCoinsWithLimits(
   distance: number,
   activityType: ActivityType,
@@ -75,7 +69,7 @@ export function calculateCoinsWithLimits(
     return { coins: 0, reachedLimit: true, limitType: 'distance' };
   }
   
-  // Calcular moedas baseado na distância
+  // Calcular moedas baseado APENAS na distância com multiplicador
   let distanceToCount = distance;
   
   // Se ultrapassar o limite de distância da modalidade, contar apenas até o limite
@@ -83,7 +77,7 @@ export function calculateCoinsWithLimits(
     distanceToCount = rules.maxDistance - currentDistanceInType;
   }
   
-  let coinsEarned = Math.floor(distanceToCount * rules.coinsPerKm);
+  let coinsEarned = Math.floor(distanceToCount * rules.multiplier);
   
   // Verificar se ultrapassaria o limite de moedas da modalidade
   if (currentCoinsInType + coinsEarned > rules.maxCoins) {
@@ -102,7 +96,7 @@ export function calculateCoinsWithLimits(
   };
 }
 
-// NOVA FUNÇÃO: Proteção anti-fraude - Verificar velocidade e retornar modalidade correta
+// FUNÇÃO: Proteção anti-fraude - Verificar velocidade e retornar modalidade correta
 export function checkSpeedAndGetActivityType(
   speed: number,
   selectedType: ActivityType
@@ -169,22 +163,12 @@ export function checkSpeedAndGetActivityType(
   };
 }
 
-// Fórmula antiga mantida para compatibilidade
-export function calculateCoins(
-  calories: number,
-  distance: number,
-  activityType: keyof typeof ACTIVITY_WEIGHTS
-): number {
-  const weight = ACTIVITY_WEIGHTS[activityType];
-  return Math.floor((calories * 0.1 + distance * 1) * weight);
-}
-
-// Cálculo aproximado de calorias (fórmula simplificada)
+// Cálculo de calorias (apenas informativo, NÃO gera moedas)
 export function calculateCalories(
   distance: number, // km
   duration: number, // segundos
   weight: number, // kg
-  activityType: keyof typeof ACTIVITY_WEIGHTS
+  activityType: ActivityType
 ): number {
   const hours = duration / 3600;
   const speed = distance / hours;
