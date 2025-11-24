@@ -6,10 +6,9 @@ import { useAuth } from '@/lib/auth-context';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { ActivityType, Activity } from '@/lib/types';
-import { ACTIVITY_LABELS, calculateCalories, calculateCoinsWithLimits, checkSpeedAndGetActivityType, ACTIVITY_RULES } from '@/lib/constants';
-import { saveActivity, getMonthlyStats } from '@/lib/activity-storage';
-import { Pause, Play, Square, Timer, Gauge, Flame, TrendingUp, Clock, AlertTriangle } from 'lucide-react';
-import { Alert, AlertDescription } from '@/components/ui/alert';
+import { ACTIVITY_LABELS, calculateCalories, calculateCoins } from '@/lib/constants';
+import { saveActivity } from '@/lib/activity-storage';
+import { Pause, Play, Square, Timer, Gauge, Flame, TrendingUp, Clock } from 'lucide-react';
 
 function ActivityContent() {
   const router = useRouter();
@@ -25,9 +24,6 @@ function ActivityContent() {
   const [pace, setPace] = useState(0); // min/km
   const [mounted, setMounted] = useState(false);
   const [startTime, setStartTime] = useState<Date | null>(null);
-  const [speedWarning, setSpeedWarning] = useState<string | null>(null);
-  const [actualActivityType, setActualActivityType] = useState<ActivityType>(activityType);
-  const [isBlocked, setIsBlocked] = useState(false);
 
   // Garantir que o componente está montado no cliente
   useEffect(() => {
@@ -62,19 +58,6 @@ function ActivityContent() {
           if (currentDuration > 0) {
             const currentSpeed = (newDistance / (currentDuration / 3600));
             setSpeed(currentSpeed);
-            
-            // PROTEÇÃO ANTI-FRAUDE: Verificar velocidade
-            const speedCheck = checkSpeedAndGetActivityType(currentSpeed, activityType);
-            
-            if (speedCheck.warning) {
-              setSpeedWarning(speedCheck.warning);
-              setActualActivityType(speedCheck.actualType);
-              setIsBlocked(speedCheck.shouldBlock);
-            } else {
-              setSpeedWarning(null);
-              setActualActivityType(activityType);
-              setIsBlocked(false);
-            }
             
             // Calcular pace (min/km)
             if (newDistance > 0) {
@@ -137,19 +120,13 @@ function ActivityContent() {
     try {
       const endTime = new Date();
       const userWeight = user.weight || 70; // peso padrão se não configurado
-      const calories = calculateCalories(distance, duration, userWeight, actualActivityType);
-      
-      // NOVA LÓGICA: Calcular moedas com limites mensais
-      const monthlyStats = getMonthlyStats(user.id);
-      const coinsResult = calculateCoinsWithLimits(distance, actualActivityType, monthlyStats);
-      
-      // Se bloqueado por velocidade, não ganha moedas
-      const coinsEarned = isBlocked ? 0 : coinsResult.coins;
+      const calories = calculateCalories(distance, duration, userWeight, activityType);
+      const coinsEarned = calculateCoins(calories, distance, activityType);
 
       const newActivity: Activity = {
         id: Date.now().toString(),
         userId: user.id,
-        type: actualActivityType,
+        type: activityType,
         distance,
         duration,
         calories,
@@ -171,12 +148,7 @@ function ActivityContent() {
     }
   };
 
-  const currentCalories = calculateCalories(distance, duration, user.weight || 70, actualActivityType);
-  
-  // Calcular moedas estimadas em tempo real
-  const monthlyStats = getMonthlyStats(user.id);
-  const estimatedCoinsResult = calculateCoinsWithLimits(distance, actualActivityType, monthlyStats);
-  const estimatedCoins = isBlocked ? 0 : estimatedCoinsResult.coins;
+  const currentCalories = calculateCalories(distance, duration, user.weight || 70, activityType);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-emerald-950 via-black to-emerald-900">
@@ -185,13 +157,13 @@ function ActivityContent() {
         <div className="text-center pt-8">
           <div className="inline-flex items-center justify-center w-20 h-20 bg-emerald-600 rounded-full mb-4">
             <span className="text-5xl">
-              {actualActivityType === 'walking' && '🚶'}
-              {actualActivityType === 'running' && '🏃'}
-              {actualActivityType === 'cycling' && '🚴'}
+              {activityType === 'walking' && '🚶'}
+              {activityType === 'running' && '🏃'}
+              {activityType === 'cycling' && '🚴'}
             </span>
           </div>
           <h1 className="text-2xl font-bold text-white mb-2">
-            {ACTIVITY_LABELS[actualActivityType]}
+            {ACTIVITY_LABELS[activityType]}
           </h1>
           <p className="text-emerald-400">Em andamento...</p>
           {startTime && (
@@ -200,28 +172,6 @@ function ActivityContent() {
             </p>
           )}
         </div>
-
-        {/* Alerta de Velocidade */}
-        {speedWarning && (
-          <Alert className={`${isBlocked ? 'bg-red-900/50 border-red-600' : 'bg-yellow-900/50 border-yellow-600'}`}>
-            <AlertTriangle className={`h-5 w-5 ${isBlocked ? 'text-red-400' : 'text-yellow-400'}`} />
-            <AlertDescription className={`${isBlocked ? 'text-red-200' : 'text-yellow-200'} font-semibold`}>
-              {speedWarning}
-            </AlertDescription>
-          </Alert>
-        )}
-
-        {/* Alerta de Limite Mensal */}
-        {estimatedCoinsResult.reachedLimit && (
-          <Alert className="bg-orange-900/50 border-orange-600">
-            <AlertTriangle className="h-5 w-5 text-orange-400" />
-            <AlertDescription className="text-orange-200 font-semibold">
-              {estimatedCoinsResult.limitType === 'coins' 
-                ? '🎯 Você atingiu o limite mensal de 2000 capicoins!' 
-                : `🎯 Você atingiu o limite de ${ACTIVITY_RULES[actualActivityType].maxDistance}km para ${ACTIVITY_LABELS[actualActivityType]} este mês!`}
-            </AlertDescription>
-          </Alert>
-        )}
 
         {/* Tempo Principal */}
         <Card className="bg-black/50 border-emerald-800">
@@ -274,19 +224,6 @@ function ActivityContent() {
             </CardContent>
           </Card>
         </div>
-
-        {/* Moedas Estimadas */}
-        <Card className="bg-gradient-to-r from-yellow-600 to-amber-600 border-none">
-          <CardContent className="p-6">
-            <div className="text-center">
-              <p className="text-white/80 text-sm mb-2">Capicoins Estimadas</p>
-              <p className="text-5xl font-bold text-white">{estimatedCoins}</p>
-              <p className="text-white/80 text-xs mt-2">
-                {ACTIVITY_RULES[actualActivityType].coinsPerKm} moedas/km • Máx: {ACTIVITY_RULES[actualActivityType].maxCoins}/mês
-              </p>
-            </CardContent>
-          </Card>
-        </Card>
 
         {/* Controles */}
         <div className="flex gap-4">

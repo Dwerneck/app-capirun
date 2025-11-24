@@ -1,6 +1,6 @@
 // Gerenciamento de atividades no localStorage (substituir por API/DB real)
 
-import { Activity, PersonalRecord, WeeklyStats, ActivityType } from './types';
+import { Activity, PersonalRecord, WeeklyStats } from './types';
 
 const ACTIVITIES_KEY = 'capirun_activities';
 
@@ -108,16 +108,7 @@ export function getWeeklyStats(userId: string): WeeklyStats {
   }
 }
 
-// ATUALIZADA: Retorna estatísticas mensais detalhadas por modalidade
-export function getMonthlyStats(userId: string): {
-  totalDistance: number;
-  totalDuration: number;
-  totalCalories: number;
-  totalCoins: number;
-  activitiesCount: number;
-  distanceByType: Record<string, number>;
-  coinsByType: Record<string, number>;
-} {
+export function getMonthlyStats(userId: string): WeeklyStats {
   if (!isClient()) {
     return {
       totalDistance: 0,
@@ -125,29 +116,15 @@ export function getMonthlyStats(userId: string): {
       totalCalories: 0,
       totalCoins: 0,
       activitiesCount: 0,
-      distanceByType: {},
-      coinsByType: {},
     };
   }
   
   try {
     const activities = getActivities(userId);
-    const now = new Date();
-    const firstDayOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+    const oneMonthAgo = new Date();
+    oneMonthAgo.setMonth(oneMonthAgo.getMonth() - 1);
     
-    const monthActivities = activities.filter(a => new Date(a.date) >= firstDayOfMonth);
-    
-    const distanceByType: Record<string, number> = {};
-    const coinsByType: Record<string, number> = {};
-    
-    monthActivities.forEach(activity => {
-      if (!distanceByType[activity.type]) {
-        distanceByType[activity.type] = 0;
-        coinsByType[activity.type] = 0;
-      }
-      distanceByType[activity.type] += activity.distance;
-      coinsByType[activity.type] += activity.coinsEarned;
-    });
+    const monthActivities = activities.filter(a => new Date(a.date) >= oneMonthAgo);
     
     return {
       totalDistance: monthActivities.reduce((sum, a) => sum + a.distance, 0),
@@ -155,8 +132,6 @@ export function getMonthlyStats(userId: string): {
       totalCalories: monthActivities.reduce((sum, a) => sum + a.calories, 0),
       totalCoins: monthActivities.reduce((sum, a) => sum + a.coinsEarned, 0),
       activitiesCount: monthActivities.length,
-      distanceByType,
-      coinsByType,
     };
   } catch (error) {
     console.error('Erro ao buscar estatísticas mensais:', error);
@@ -166,8 +141,6 @@ export function getMonthlyStats(userId: string): {
       totalCalories: 0,
       totalCoins: 0,
       activitiesCount: 0,
-      distanceByType: {},
-      coinsByType: {},
     };
   }
 }
