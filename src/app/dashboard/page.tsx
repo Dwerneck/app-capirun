@@ -9,6 +9,7 @@ import { Progress } from '@/components/ui/progress';
 import { getWeeklyStats, getMonthlyStats } from '@/lib/activity-storage';
 import { Activity, Flame, TrendingUp, Coins, User, LogOut, Target, Scale, Trophy, Calendar, Gift, Heart } from 'lucide-react';
 import Link from 'next/link';
+import Image from 'next/image';
 
 export default function DashboardPage() {
   const router = useRouter();
@@ -42,8 +43,14 @@ export default function DashboardPage() {
       <header className="bg-black/50 border-b border-emerald-800 p-4">
         <div className="max-w-7xl mx-auto flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-emerald-600 rounded-full flex items-center justify-center">
-              <span className="text-2xl">🦫</span>
+            <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full overflow-hidden bg-white flex items-center justify-center">
+              <Image 
+                src="https://k6hrqrxuu8obbfwn.public.blob.vercel-storage.com/temp/4e3b426d-54e1-43a9-8e16-d2543cc5dbfd.jpg" 
+                alt="Logo Capirun" 
+                width={48}
+                height={48}
+                className="w-full h-full object-cover"
+              />
             </div>
             <div>
               <h1 className="text-xl font-bold text-white">Capirun</h1>
